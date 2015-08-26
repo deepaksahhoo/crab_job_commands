@@ -1,0 +1,61 @@
+# crab environment set-up
+source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh
+source /afs/cern.ch/cms/ccs/wm/scripts/Crab/crab.sh
+
+# create the proxy
+voms-proxy-init -voms cms -valid 192:00
+
+# check the proxy
+voms-proxy-info -all
+
+# create the crab jobs
+crab -cfg crab_BuToKstarJPsi_8TeV_2p5E7.cfg -create
+
+# submit the jobs
+crab -c Grid_BuToKstarMuMu_BuToKstarJpsi -submit all
+
+# if total no. of jobs > 500 , then submit the jobs in splitted form
+crab -c Grid_BuToKstarMuMu_BuToKstarJpsi -submit 1-500
+crab -c Grid_BuToKstarMuMu_BuToKstarJpsi -submit 501-1000
+
+# to resubmit a particular job
+crab -c Grid_BuToKstarMuMu_BuToKstarJpsi -resubmit <job-id>
+
+# check the job status
+crab -status -c Grid_BuToKstarMuMu_BuToKstarJpsi
+
+# get the job output 
+crab -getoutput -c Grid_BuToKstarMuMu_BuToKstarJpsi
+
+# check the good files 
+find_goodfiles.py -c <crab_xxxx> -q
+
+# check the duplicate files (if any)
+find_dupl.sh -c <crab_xxxx> -q
+
+# get the info about correctly finished jobs
+crab -report -c <crab_xxxxx>
+
+# copy the root files from SE to ui
+crab -copyData -c <crab_xxxx>
+
+In case of MC, you will get a message like following
+==
+crab:  The summary file inputLumiSummaryOfTask.json about input run and lumi isn't created
+crab:  No json file to compare
+==
+
+But in case of data, you will find two json files in crab_xxxx/res/ sub-directory
+==
+inputLumiSummaryOfTask.json --> the lumi sections that your created jobs have to analyze (that are info used as arguments of your jobs)
+lumiSummary.json            --> the lumi sections really analyzed by your correctly terminated jobs 
+==
+
+# kill all the jobs
+crab -c Grid_BuToKstarMuMu_BuToKstarJpsi -kill all
+
+# upload the log file 
+crab -uploadLog <job-id>
+
+# clean the cache
+crab -cleanCache
